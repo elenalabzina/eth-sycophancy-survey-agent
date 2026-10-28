@@ -6,6 +6,27 @@ Local testing prototype developed by **Elena Labzina (Zürich, October 2026)**. 
 
 **For individual local testing only.** This is a development prototype, not a hosted service.
 
+## How it works
+
+```mermaid
+flowchart TD
+    U["Browser chat · localhost:8090"] --> API["FastAPI · session and chat endpoints"]
+    API --> T{"Selected conversational policy"}
+    T --> N["Neutral · independent assessment"]
+    T --> S["Sycophantic · positive affirmation and user-aligned framing"]
+    N --> Q["Qwen3-14B · local inference on port 8080"]
+    S --> Q
+    API --> W{"Internet search enabled and current facts needed?"}
+    W -->|Yes| X["SearXNG · Docker · port 8888"]
+    X --> Q
+    W -->|No| Q
+    Q --> API
+    API --> U
+    API --> D["Transcript JSON · download on request"]
+```
+
+The **same Qwen model and generation settings** serve both conditions; only the conversational policy differs. The browser communicates with the local FastAPI app, which maintains each conversation in memory. Internet search is optional and uses SearXNG to retrieve public information when relevant. Both conditions have the same search mechanism.
+
 ## Run it on your own computer
 
 **Requirements:** Python 3.11+, Git, enough RAM/VRAM for Qwen3-14B. The model downloads from Hugging Face on first launch. No OpenAI API key is needed for local inference. **Docker is not required** unless you enable search.
