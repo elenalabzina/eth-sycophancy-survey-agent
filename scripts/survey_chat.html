@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ETH Survey Agent — Local Chat</title>
+<title>Sycophancy Survey Agent — Local Chat</title>
 <style>
 :root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1c2936;background:#f5f7fa}*{box-sizing:border-box}
 body{margin:0}main{max-width:780px;margin:24px auto;padding:0 18px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -20,7 +20,7 @@ textarea{font:inherit;font-size:15px;border:1px solid #cbd5e1;border-radius:10px
 .site-footer{text-align:center;color:#718096;font-size:12px;margin:20px 0 8px;line-height:1.5}
 @media(max-width:560px){main{margin:12px auto}.msg{max-width:96%}#messages{height:60vh}}
 </style></head><body><main>
-<div class="top"><div><h1>ETH Survey Agent</h1><p>Conversational AI research preview · choose your topic and duration</p></div>
+<div class="top"><div><h1>Sycophancy Survey Agent</h1><p>Conversational AI research preview · choose your topic and duration</p></div>
 <div class="controls"><label for="topic">Topic</label><select id="topic"><option value="ai">AI & regulation</option><option value="energy">Clean energy</option></select><label for="duration">Time limit</label><select id="duration"><option value="300">5 minutes</option><option value="unlimited">Unlimited</option></select><label for="internet-access">Internet</label><select id="internet-access"><option value="off">Off</option><option value="on">On (search)</option></select><label for="condition">Preview</label><select id="condition"><option value="neutral">Neutral</option><option value="sycophantic">Sycophantic</option></select><button id="new" type="button">New conversation</button><button id="export" type="button">Download transcript</button></div></div>
 <section class="panel"><div class="head"><span id="session-label">Start a conversation</span><span class="timer" id="clock" aria-label="Time remaining">05:00</span></div>
 <div id="messages" role="log" aria-live="polite"><div class="notice">Choose a topic, then begin the conversation.</div></div>
