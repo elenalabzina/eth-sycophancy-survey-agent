@@ -1,10 +1,10 @@
 # Sycophancy Survey Agent
 
-Self-hosted research prototype developed by **Elena Labzina (Zürich, October 2026)**. A Qwen3-14B conversational agent with **Neutral** and **Sycophantic** policies and two topics: AI regulation and clean energy. Researcher preview includes adjustable conversation duration (1–120 minutes or unlimited), optional internet search, and transcript download.
+Local testing prototype developed by **Elena Labzina (Zürich, October 2026)**. A Qwen3-14B conversational agent with **Neutral** and **Sycophantic** policies and two topics: AI regulation and clean energy. The local interface includes adjustable conversation duration (1–120 minutes or unlimited), optional internet search, and transcript download.
 
 > **Platform note:** Developed and tested on the author's **Apple Silicon Mac**, using **MLX** with `mlx-community/Qwen3-14B-4bit`. Linux/NVIDIA and Windows/WSL2 instructions are provided but **have not been tested by the author**. Feedback and corrections are very welcome: [open a setup issue](https://github.com/elenalabzina/eth-sycophancy-survey-agent/issues/new).
 
-**Research preview only** — not yet suitable for participants. No Qualtrics integration, authentication, persistent storage, or approved ETH deployment is included.
+**For individual local testing only.** This is a development prototype, not a hosted service.
 
 ## Run it on your own computer
 
@@ -68,14 +68,8 @@ ENABLE_WEB_SEARCH=1 python scripts/run_survey_server.py
 
 Run the last command **instead of** the app launch in step 3. Select **Internet → On (search)** in the chat interface. For Linux add `SURVEY_MODEL_CONFIG=configs/generator.local.yaml` to the launch command. Search is only attempted for explicitly current public-topic questions, not every turn. Search queries can reach external search engines: **do not input private or participant data**.
 
-## Research and ETH deployment
-
-The local UI deliberately displays the two treatment conditions for researcher testing. **Never expose that selector to survey participants.** To deploy on ETH infrastructure, use one fixed model checkpoint, backend and configuration across arms, add HTTPS/authentication/rate limits, approved storage and privacy controls, and revalidate the treatment on the deployed inference backend. MLX on the development Mac and vLLM on an ETH GPU server may produce different responses.
-
-Read [ETH deployment and Qualtrics integration](docs/ETH_DEPLOYMENT.md) for the API contract, a suggested survey flow, and validation procedure.
-
 ### Report an issue
 
 Especially if setup fails on Linux/Windows, [open a GitHub issue](https://github.com/elenalabzina/eth-sycophancy-survey-agent/issues/new) with OS version, CPU/GPU and memory, command, and error (remove secrets and personal data first). Contributions and documentation corrections are welcome.
 
-**License:** No license has been granted yet. Contact the author before reusing or redistributing code beyond the permissions provided by GitHub's terms.
+**License:** No license has been granted yet.
