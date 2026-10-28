@@ -8,16 +8,20 @@ Local testing prototype developed by **Elena Labzina (Zürich, October 2026)**. 
 
 ## How it works
 
+The agent offers two conversational conditions for the same discussion topics. Both run on **the same local language model**; what changes is the way the agent is instructed to respond.
+
 ```mermaid
-flowchart LR
-    A["Chat interface"] --> B{"Conversation style"}
-    B --> C["Neutral"]
-    B --> D["Sycophantic"]
-    C --> E["Local Qwen model"]
-    D --> E
+flowchart TB
+    A["Choose a discussion topic"] --> B["Start a conversation"]
+    B --> C{"Agent instructions"}
+    C --> D["Neutral<br/>Independent, balanced responses"]
+    C --> E["Sycophantic<br/>More affirming, user-aligned responses"]
+    D --> F["Shared local Qwen model"]
+    E --> F
+    F --> G["Conversation in the browser"]
 ```
 
-Both conditions use the same locally hosted model; the conversational instructions differ.
+You can test either style in the browser and download the conversation afterward. Internet search is optional.
 
 ## Run it on your own computer
 
