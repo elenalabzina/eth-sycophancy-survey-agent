@@ -6,6 +6,8 @@ Local testing prototype developed by **Elena Labzina (Zürich, October 2026)**. 
 
 **For individual local testing only.** This is a development prototype, not a hosted service.
 
+See [Treatment methodology](docs/sycophancy_methodology.md) for the rationale behind the two agent policies.
+
 ## How it works
 
 The agent offers two conversational conditions for the same discussion topics. Both run on **the same local language model**; what changes is the way the agent is instructed to respond.
