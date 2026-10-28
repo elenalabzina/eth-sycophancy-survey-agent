@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ETH Survey Agent — Local Chat</title>
+<style>
+:root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1c2936;background:#f5f7fa}*{box-sizing:border-box}
+body{margin:0}main{max-width:780px;margin:24px auto;padding:0 18px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-size:25px;letter-spacing:-.6px;margin:0}p{color:#596778;margin:7px 0 20px;font-size:14px}.controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+button,select{border:1px solid #cbd5e1;border-radius:10px;padding:10px 14px;background:white;font:inherit;font-size:14px;cursor:pointer}
+button.primary{background:#1d4ed8;color:white;border-color:#1d4ed8}button:disabled{opacity:.55;cursor:wait}
+.panel{background:white;border:1px solid #dbe2eb;border-radius:16px;box-shadow:0 12px 42px #101a2a0d;overflow:hidden}
+.head{padding:14px 20px;border-bottom:1px solid #e8edf3;font-size:13px;color:#596778;display:flex;align-items:center;justify-content:space-between;gap:12px}.timer{font-variant-numeric:tabular-nums;font-weight:700;font-size:17px;white-space:nowrap;color:#1d4ed8;background:#eff6ff;border-radius:9px;padding:7px 11px}
+#messages{height:min(66vh,690px);min-height:390px;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+.msg{max-width:84%;padding:13px 16px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:15px}
+.user{align-self:flex-end;background:#dbeafe;color:#173a6b}.assistant{align-self:flex-start;background:#f1f4f8}
+.notice{align-self:center;text-align:center;color:#6b7787;font-size:13px;margin:auto}
+.sources{font-size:12px;padding:0 4px;color:#536477;max-width:84%}.sources a{color:#1d4ed8;overflow-wrap:anywhere}
+form{display:flex;gap:9px;border-top:1px solid #e8edf3;padding:14px}
+textarea{font:inherit;font-size:15px;border:1px solid #cbd5e1;border-radius:10px;padding:12px;flex:1;resize:vertical;min-height:48px;max-height:140px}
+#status{font-size:12px;color:#64748b;min-height:18px;margin-top:10px}
+.site-footer{text-align:center;color:#718096;font-size:12px;margin:20px 0 8px;line-height:1.5}
+@media(max-width:560px){main{margin:12px auto}.msg{max-width:96%}#messages{height:60vh}}
+</style></head><body><main>
+<div class="top"><div><h1>ETH Survey Agent</h1><p>Conversational AI research preview · choose your topic and duration</p></div>
+<div class="controls"><label for="topic">Topic</label><select id="topic"><option value="ai">AI & regulation</option><option value="energy">Clean energy</option></select><label for="duration">Time limit</label><select id="duration"><option value="300">5 minutes</option><option value="unlimited">Unlimited</option></select><label for="internet-access">Internet</label><select id="internet-access"><option value="off">Off</option><option value="on">On (search)</option></select><label for="condition">Preview</label><select id="condition"><option value="neutral">Neutral</option><option value="sycophantic">Sycophantic</option></select><button id="new" type="button">New conversation</button><button id="export" type="button">Download transcript</button></div></div>
+<section class="panel"><div class="head"><span id="session-label">Start a conversation</span><span class="timer" id="clock" aria-label="Time remaining">05:00</span></div>
+<div id="messages" role="log" aria-live="polite"><div class="notice">Choose a topic, then begin the conversation.</div></div>
+<form id="composer"><textarea id="message" maxlength="2000" aria-label="Your message" placeholder="Type your message… (Enter to send, Shift+Enter for newline)" required></textarea><button id="send" class="primary" type="submit">Send</button></form></section><div id="status" role="status"></div>
+<footer class="site-footer">Developed by Elena Labzina · Zürich, Switzerland · October 2026</footer>
+</main><script>
+const ui={duration:document.querySelector('#duration'),topic:document.querySelector('#topic'),condition:document.querySelector('#condition'),start:document.querySelector('#new'),messages:document.querySelector('#messages'),form:document.querySelector('#composer'),input:document.querySelector('#message'),send:document.querySelector('#send'),status:document.querySelector('#status'),label:document.querySelector('#session-label'),clock:document.querySelector('#clock'),export:document.querySelector('#export'),internet:document.querySelector('#internet-access')};
+let sid=null,busy=false,deadline=0,expired=false;
+function tick(){if(!deadline)return;const secs=Math.max(0,Math.ceil((deadline-Date.now())/1000));ui.clock.textContent=String(Math.floor(secs/60)).padStart(2,"0")+":"+String(secs%60).padStart(2,"0");if(secs===0&&!expired){expired=true;ui.input.disabled=true;ui.send.disabled=true;status("Five minutes elapsed. Download the transcript or continue in Qualtrics.");}}setInterval(tick,500);
+function activate(d){sid=d.session_id;deadline=d.duration_seconds===null?0:Date.now()+d.duration_seconds*1000;expired=false;ui.clock.textContent=deadline?'05:00':'No time limit';tick();}
+function setBusy(value){busy=value;ui.send.disabled=value;ui.start.disabled=value;ui.condition.disabled=value;ui.topic.disabled=value;ui.duration.disabled=value;ui.internet.disabled=value;ui.input.disabled=value||expired;}
+function status(message){ui.status.textContent=message;}
+function message(role,text){const n=document.createElement('div');n.className='msg '+role;n.textContent=text;ui.messages.append(n);ui.messages.scrollTop=ui.messages.scrollHeight;return n;}
+async function json(url,body){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:'Request failed ('+r.status+')');return d;}
+async function start(){setBusy(true);status('Starting…');try{const d=await json('/session',{condition:ui.condition.value,topic:ui.topic.value,duration_seconds:ui.duration.value==='unlimited'?null:300,internet_access:ui.internet.value==='on'});activate(d);ui.messages.replaceChildren();message("assistant",d.opening);ui.label.textContent=(ui.condition.value==='neutral'?'Neutral':'Sycophantic')+' · new session';status('Ready · internet '+(d.internet_access?'on (search for current facts)':'off')+' · stored in server memory only');}catch(e){status('Error: '+e.message);}finally{setBusy(false);ui.input.focus();}}
+ui.start.addEventListener('click',start);
+ui.duration.addEventListener('change',()=>{start();});
+ui.topic.addEventListener('change',()=>{start();});
+ui.condition.addEventListener('change',()=>{start();});
+ui.internet.addEventListener('change',()=>{start();});
+ui.form.addEventListener('submit',async(e)=>{e.preventDefault();if(busy||expired)return;const text=ui.input.value.trim();if(!text)return;setBusy(true);try{if(!sid){const d=await json('/session',{condition:ui.condition.value,topic:ui.topic.value,duration_seconds:ui.duration.value==='unlimited'?null:300});activate(d);ui.messages.replaceChildren();message("assistant",d.opening);ui.label.textContent=(ui.condition.value==='neutral'?'Neutral':'Sycophantic')+' · active session';}message('user',text);ui.input.value='';const waiting=message('assistant','Thinking…');status('Generating response…');const d=await json('/chat',{session_id:sid,message:text});waiting.textContent=d.reply;if(typeof d.remaining_seconds==='number'){deadline=Date.now()+d.remaining_seconds*1000;tick();}ui.label.textContent=(ui.condition.value==='neutral'?'Neutral':'Sycophantic')+' · turn '+d.turn;for(const s of (d.sources||[])){if(!s.url||!/^https?:\/\//i.test(s.url))continue;const div=document.createElement('div');div.className='sources';const a=document.createElement('a');a.href=s.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=s.title||s.url;div.append('Source: ',a);ui.messages.append(div);}status('Ready');ui.messages.scrollTop=ui.messages.scrollHeight;}catch(err){message('assistant','Error: '+err.message);status('Error: '+err.message);}finally{setBusy(false);ui.input.focus();}});
+ui.export.addEventListener('click',async()=>{if(!sid){status('No session to export');return;}try{const r=await fetch('/transcript/'+encodeURIComponent(sid));if(!r.ok)throw Error('Export unavailable');const data=await r.json();const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='survey_transcript_'+sid.slice(0,8)+'.json';a.click();URL.revokeObjectURL(url);status('Transcript downloaded');}catch(e){status(e.message);}});
+ui.input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ui.form.requestSubmit();}});
+start();
+</script></body></html>
