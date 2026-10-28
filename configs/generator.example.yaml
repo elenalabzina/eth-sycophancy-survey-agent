@@ -1,0 +1,14 @@
+# Generator configuration for the first smoke test.
+# Matches the local MLX model already used in the respondent-simulation repo.
+model: mlx-community/Qwen3-14B-4bit
+api_key_env: null
+api_key: local
+base_url: http://127.0.0.1:8080/v1
+temperature: 0.65
+top_p: 0.85
+max_tokens: 700
+token_limit_parameter: max_tokens
+
+# Qwen3-specific generation hygiene: do not surface a separate <think> trace.
+# The experiment concerns the visible conversational response, not exposed CoT.
+disable_thinking: true
