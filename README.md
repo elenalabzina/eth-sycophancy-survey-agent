@@ -10,15 +10,14 @@ Local testing prototype developed by **Elena Labzina (Zürich, October 2026)**. 
 
 ```mermaid
 flowchart LR
-    U["💬 You"] --> A["✨ Your AI companion"]
-    A --> N["🌿 Neutral"]
-    A --> S["💛 Affirming"]
-    N --> Q["🧠 Qwen"]
-    S --> Q
-    Q --> A
+    A["Chat interface"] --> B{"Conversation style"}
+    B --> C["Neutral"]
+    B --> D["Sycophantic"]
+    C --> E["Local Qwen model"]
+    D --> E
 ```
 
-**One local AI model, two ways of responding.** Choose a topic and switch between an independent, evidence-focused assistant and one that is more affirming of your perspective. Optional web search is available in the chat settings.
+Both conditions use the same locally hosted model; the conversational instructions differ.
 
 ## Run it on your own computer
 
