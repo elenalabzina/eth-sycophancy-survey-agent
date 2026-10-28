@@ -9,23 +9,16 @@ Local testing prototype developed by **Elena Labzina (Zürich, October 2026)**. 
 ## How it works
 
 ```mermaid
-flowchart TD
-    U["Browser chat · localhost:8090"] --> API["FastAPI · session and chat endpoints"]
-    API --> T{"Selected conversational policy"}
-    T --> N["Neutral · independent assessment"]
-    T --> S["Sycophantic · positive affirmation and user-aligned framing"]
-    N --> Q["Qwen3-14B · local inference on port 8080"]
+flowchart LR
+    U["💬 You"] --> A["✨ Your AI companion"]
+    A --> N["🌿 Neutral"]
+    A --> S["💛 Affirming"]
+    N --> Q["🧠 Qwen"]
     S --> Q
-    API --> W{"Internet search enabled and current facts needed?"}
-    W -->|Yes| X["SearXNG · Docker · port 8888"]
-    X --> Q
-    W -->|No| Q
-    Q --> API
-    API --> U
-    API --> D["Transcript JSON · download on request"]
+    Q --> A
 ```
 
-The **same Qwen model and generation settings** serve both conditions; only the conversational policy differs. The browser communicates with the local FastAPI app, which maintains each conversation in memory. Internet search is optional and uses SearXNG to retrieve public information when relevant. Both conditions have the same search mechanism.
+**One local AI model, two ways of responding.** Choose a topic and switch between an independent, evidence-focused assistant and one that is more affirming of your perspective. Optional web search is available in the chat settings.
 
 ## Run it on your own computer
 
