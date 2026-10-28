@@ -63,29 +63,37 @@ For Linux/WSL2, copy `configs/generator.example.yaml` to `configs/generator.loca
 
 ### 3. Start the browser agent (Terminal B)
 
+Choose **one** of the following launch options. Keep the Qwen server from step 2 running.
+
+**Option A — Without internet search (default):**
+
 ```bash
 source .venv/bin/activate
 python scripts/run_survey_server.py
 ```
 
-On Linux/WSL2 use:
+**Option B — With internet search:**
 
-```bash
-SURVEY_MODEL_CONFIG=configs/generator.local.yaml python scripts/run_survey_server.py
-```
-
-Open **http://127.0.0.1:8090/**. Choose topic, preview condition, conversation length, and Internet **Off** (default). Select **New conversation** and try both treatments. Use **Download transcript** for the resulting JSON. The app stores sessions in RAM only; restarting it clears them.
-
-### 4. Optional internet search
-
-Install [Docker Desktop (macOS/Windows)](https://www.docker.com/products/docker-desktop/) or [Docker Engine (Linux)](https://docs.docker.com/engine/install/), launch Docker, and run:
+First, install and start [Docker Desktop](https://www.docker.com/products/docker-desktop/) (macOS/Windows) or [Docker Engine](https://docs.docker.com/engine/install/) (Linux). Start the local SearXNG search service:
 
 ```bash
 docker compose -f deploy/searxng.compose.yaml up -d
+```
+
+Then launch the agent with search enabled:
+
+```bash
+source .venv/bin/activate
 ENABLE_WEB_SEARCH=1 python scripts/run_survey_server.py
 ```
 
-Run the last command **instead of** the app launch in step 3. Select **Internet → On (search)** in the chat interface. For Linux add `SURVEY_MODEL_CONFIG=configs/generator.local.yaml` to the launch command. Search is only attempted for explicitly current public-topic questions, not every turn. Search queries can reach external search engines: **do not input private or participant data**.
+For Linux/WSL2, prepend `SURVEY_MODEL_CONFIG=configs/generator.local.yaml` to **either** launch command (the configuration described in step 2).
+
+Open **http://127.0.0.1:8090/**. Choose a topic, conversational condition, and duration, then click **New conversation**. If you launched Option B, set **Internet → On (search)** *before* starting a new conversation. Otherwise leave Internet **Off**.
+
+Use **Download transcript** to save the conversation as JSON. Sessions are stored in memory and disappear when the server restarts.
+
+**Notes:** Internet search runs only when the message explicitly calls for current information; it is not used on every turn. Search queries may reach external search engines, so do not enter sensitive or identifying information. Do not launch both options simultaneously: they use the same port (8090). If that port is already occupied, stop the previous chat server with Ctrl+C before restarting.
 
 ### Report an issue
 
