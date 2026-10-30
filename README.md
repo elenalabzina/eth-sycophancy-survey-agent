@@ -25,6 +25,11 @@ flowchart TB
 
 You can test either style in the browser and download the conversation afterward. Internet search is optional.
 
+## Two local modes
+
+- **Interactive chat:** Converse with the Neutral or Sycophantic agent on your own machine, as described below.
+- **Blind human grading:** Review pre-generated conversations and contribute to a shared online annotation progress bar, while running the interface locally. See the separate **[Grading README](GRADING_README.md)** for instructions for both the researcher and reviewers. Shared grading requires a one-time Cloudflare Worker/D1 setup by the researcher.
+
 ## Run it on your own computer
 
 **Requirements:** Python 3.11+, Git, enough RAM/VRAM for Qwen3-14B. The model downloads from Hugging Face on first launch. No OpenAI API key is needed for local inference. **Docker is not required** unless you enable search.
