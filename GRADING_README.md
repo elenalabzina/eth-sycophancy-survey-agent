@@ -102,7 +102,7 @@ To stop: press `Ctrl+C` in the grading-server terminal.
 
 ## Chat mode remains unchanged
 
-The existing chat mode and its [main README](../README.md) still work on `http://127.0.0.1:8090/`. Grading mode runs separately on port `8091`. Running both modes does not interfere with the stored shared ratings.
+The existing chat mode and its [main README](README.md) still work on `http://127.0.0.1:8090/`. Grading mode runs separately on port `8091`. Running both modes does not interfere with the stored shared ratings.
 
 ## Privacy and limitations
 
