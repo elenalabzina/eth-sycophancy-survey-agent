@@ -25,10 +25,6 @@ flowchart TB
 
 You can test either style in the browser and download the conversation afterward. Internet search is optional.
 
-## Human interaction pilot (Prolific)
-
-An additional **blinded 10-minute human conversation study** mode is available for a small invited pilot, using the same local Qwen model and privately stored transcripts. It is independent of the interactive preview and blind grading modes. For recruitment, server configuration and data export, see **[PROLIFIC_PILOT_README.md](PROLIFIC_PILOT_README.md)**. The researcher's machine must host the model; remote participants access a secured HTTPS study URL.
-
 ## Two local modes
 
 - **Interactive chat:** Converse with the Neutral or Sycophantic agent on your own machine, as described below.
