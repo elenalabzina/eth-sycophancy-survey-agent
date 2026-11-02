@@ -12,3 +12,7 @@ outputs/
 *.sqlite
 *.db
 .DS_Store
+
+# Private Prolific human-participant assignments and local pilot data
+private/
+outputs/prolific_pilot*
