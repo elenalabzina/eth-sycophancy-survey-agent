@@ -28,6 +28,7 @@ You can test either style in the browser and download the conversation afterward
 ## Two local modes
 
 - **Interactive chat:** Converse with the Neutral or Sycophantic agent on your own machine, as described below.
+- **Prolific participant pilot (4 people):** Randomly assigned, blinded five-minute conversations running on the researcher's Mac and accessed through a temporary HTTPS tunnel. See [Prolific pilot README](PROLIFIC_PILOT_README.md).
 - **Blind human grading:** Review pre-generated conversations and contribute to a shared online annotation progress bar, while running the interface locally. See the separate **[Grading README](GRADING_README.md)** for instructions for both the researcher and reviewers. Shared grading requires a one-time Cloudflare Worker/D1 setup by the researcher.
 
 ## Run it on your own computer
