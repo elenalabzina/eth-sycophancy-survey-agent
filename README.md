@@ -41,8 +41,24 @@ cd eth-sycophancy-survey-agent
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[server,dev]'
+```
+
+**Optional installation check (recommended for testers):**
+
+```bash
 python -m pytest -q
 ```
+
+- **If the tests pass:** Continue to step 2. Tests check the code; they do not verify that your computer can run the Qwen model.
+- **If the tests fail:** Copy the full failure output. First check that you are in the repository directory and that your virtual environment is active, then retry:
+
+  ```bash
+  source .venv/bin/activate
+  python -m pip install -e '.[server,dev]'
+  python -m pytest -q
+  ```
+
+  On Windows, run these commands inside the **WSL2 Ubuntu** terminal. If the same tests still fail, [open a GitHub issue](https://github.com/elenalabzina/eth-sycophancy-survey-agent/issues/new) with the failed test names, error output, your operating system, Python version (`python --version`), and the command you ran. Remove any personal information or credentials before posting. **Do not interpret a failed test as a successful installation**; you can still try step 2 for diagnosis, but mention the failures when reporting whether the agent works.
 
 ### 2. Start Qwen (Terminal A)
 
