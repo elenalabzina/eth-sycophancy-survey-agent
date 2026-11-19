@@ -25,10 +25,7 @@ flowchart TB
 
 You can test either style in the browser and download the conversation afterward. Internet search is optional.
 
-## Two local modes
-
-- **Interactive chat:** Converse with the Neutral or Sycophantic agent on your own machine, as described below.
-- **Blind human grading:** Review pre-generated conversations and contribute to a shared online annotation progress bar, while running the interface locally. See the separate **[Grading README](GRADING_README.md)** for instructions for both the researcher and reviewers. Shared grading requires a one-time Cloudflare Worker/D1 setup by the researcher.
+**Work in progress:** A separate blind human-grading workflow is under development and is not part of the current local testing instructions.
 
 ## Run it on your own computer
 
