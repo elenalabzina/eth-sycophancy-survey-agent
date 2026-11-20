@@ -1,7 +1,7 @@
-# Example configuration for Linux / Windows WSL2 with vLLM.
+# Example configuration for Linux / Windows WSL2 with vLLM and 4-bit AWQ weights.
 # Make a local copy as configs/generator.local.yaml (ignored by Git).
 # This is the MODEL NAME exposed by the vLLM server, not a filesystem path.
-model: Qwen/Qwen3-14B
+model: Qwen/Qwen3-14B-AWQ
 api_key_env: null
 api_key: local
 # vLLM exposes an OpenAI-compatible API at /v1 on the same machine.
