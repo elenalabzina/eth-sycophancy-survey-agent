@@ -29,35 +29,22 @@ You can test either style in the browser and download the conversation afterward
 
 ## Run it on your own computer
 
-There are **two processes**, which must run at the same time:
+**Start here if you're using a Mac.** The Apple Silicon instructions below are the configuration tested by the author. Linux and Windows/WSL2 instructions follow as separate alternatives and are not yet verified.
 
-1. **Model server** (Terminal A, port **8080**): runs Qwen3-14B. On Apple Silicon this uses MLX; on Linux/Windows with NVIDIA GPUs it uses vLLM with a 4-bit AWQ checkpoint.
-2. **Browser chat app** (Terminal B, port **8090**): connects to the model server. It does **not** run or download the model by itself.
+The agent runs as **two local processes**: a Qwen model server on port **8080** and a browser chat app on port **8090**. Keep both terminals open while chatting. No paid model API is needed. Internet search is optional and requires Docker.
 
-**Hardware:** Qwen3-14B is a large local model. Both the Mac/MLX version and the Linux/WSL2 vLLM version below use **4-bit quantized weights** (different formats: MLX versus AWQ). The AWQ weights need roughly 7–10 GB before runtime overhead; KV cache, context length, and serving overhead require additional VRAM. A compatible NVIDIA GPU with **16 GB or more VRAM is a reasonable starting point**, not a guarantee. Smaller GPUs may fail, and requirements vary with model settings and hardware. Check [vLLM's AWQ compatibility table](https://docs.vllm.ai/en/latest/features/quantization/) for your GPU generation. The Linux/WSL2 path requires an NVIDIA GPU with compatible drivers; alternative hardware is not covered here.
+### A. macOS with Apple Silicon — tested setup
 
-**Software:** Python 3.11+, Git, and an internet connection for first-time package/model downloads. No paid LLM API key is required. Docker is optional **only for web search**.
-
-### 1. Install the project (all platforms)
-
-**Linux (Ubuntu/Debian):** If Python, Git or virtual-environment support is missing, install them first:
+**Prerequisites:** A Mac with Apple Silicon, sufficient unified memory to run the 4-bit Qwen3-14B model, an internet connection for the first download, **Git**, and **Python 3.11+**. Open **Terminal** and check:
 
 ```bash
-sudo apt update
-sudo apt install -y git python3 python3-venv python3-pip curl
+git --version
+python3 --version
 ```
 
-**Windows 10/11:** These instructions use **Ubuntu inside WSL2**, not native Windows Python or PowerShell. First open **PowerShell as Administrator** and run:
+If either command is missing, install Git (for example, using Apple's Command Line Tools via `xcode-select --install`) and [Python](https://www.python.org/downloads/macos/), then reopen Terminal. Confirm that `python3 --version` reports **3.11 or newer**.
 
-```powershell
-wsl --install -d Ubuntu
-```
-
-Restart Windows if prompted. Open **Ubuntu** from the Start menu and complete the first-run username/password setup. Run all subsequent Linux commands **inside the Ubuntu terminal**. For installation guidance see [Microsoft's WSL documentation](https://learn.microsoft.com/en-us/windows/wsl/install). You will also need an NVIDIA Windows driver that supports CUDA in WSL; see [NVIDIA's CUDA on WSL guide](https://docs.nvidia.com/cuda/wsl-user-guide/index.html). **Do not install a separate Linux NVIDIA display driver inside WSL.**
-
-**macOS:** Open Terminal and make sure Python 3.11+ and Git are installed.
-
-Now, on any platform (**Ubuntu terminal on Windows**), clone the repository and install the project:
+**Step 1 — Get the project and install its Python dependencies**
 
 ```bash
 git clone https://github.com/elenalabzina/eth-sycophancy-survey-agent.git
@@ -65,137 +52,130 @@ cd eth-sycophancy-survey-agent
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[server,dev]'
-```
-
-The `.venv` directory is a private Python environment for this project. When you open a **new terminal**, return to the repository directory and run `source .venv/bin/activate` again.
-
-**Optional installation check (recommended):**
-
-```bash
-python -m pytest -q
-```
-
-- **Tests pass:** Continue. This checks the project code, **not** whether the model fits on your GPU.
-- **Tests fail:** Confirm that you're inside the project directory, activate `.venv`, then rerun `python -m pip install -e '.[server,dev]'` and `python -m pytest -q`. If it still fails, [file an issue](https://github.com/elenalabzina/eth-sycophancy-survey-agent/issues/new) with the error output and your OS/Python version. Do not include secrets or personal data.
-
-### 2. Install and start Qwen (Terminal A)
-
-Choose **one** path below according to your computer. Keep this terminal open once the model server starts.
-
-#### macOS with Apple Silicon — tested
-
-Uses the [4-bit MLX model](https://huggingface.co/mlx-community/Qwen3-14B-4bit), which downloads automatically on first use.
-
-```bash
-source .venv/bin/activate
 python -m pip install mlx-lm
+```
+
+**Optional check:** Run `python -m pytest -q`. If tests pass, continue. If they fail, ensure you are in the repository directory with `.venv` active, rerun the installation commands, and [report persistent failures](https://github.com/elenalabzina/eth-sycophancy-survey-agent/issues/new) with the test output and Python version. Passing tests does not check whether the model fits in memory.
+
+**Step 2 — Start Qwen in Terminal A**
+
+```bash
 python -m mlx_lm server --model mlx-community/Qwen3-14B-4bit --port 8080
 ```
 
-The default config `configs/generator.example.yaml` already matches this model; **no configuration change is needed on Mac**.
+This downloads the [MLX 4-bit Qwen3-14B model](https://huggingface.co/mlx-community/Qwen3-14B-4bit) on first use. **Leave Terminal A open** after the server starts.
 
-#### Linux with NVIDIA GPU (4-bit AWQ) — not yet verified
+**Step 3 — Start the browser app in Terminal B**
 
-**Yes, you must install vLLM before running `vllm serve`.** vLLM is the local model-serving program; `serve` starts an OpenAI-compatible HTTP server. It does not install anything.
-
-First check that Linux can see your NVIDIA GPU:
-
-```bash
-nvidia-smi
-```
-
-If this command fails, fix your GPU driver/CUDA setup before proceeding. See [vLLM's official GPU installation guide](https://docs.vllm.ai/en/stable/getting_started/installation/gpu/) for compatibility and alternative installation methods.
-
-Install vLLM **inside the activated project environment**:
-
-```bash
-source .venv/bin/activate
-python -m pip install vllm
-vllm --help
-```
-
-Then start the [official Qwen3-14B-AWQ 4-bit model](https://huggingface.co/Qwen/Qwen3-14B-AWQ) on local port 8080:
-
-```bash
-vllm serve Qwen/Qwen3-14B-AWQ --host 127.0.0.1 --port 8080 --max-model-len 4096
-```
-
-The checkpoint is **already quantized**: you do not need to run a quantization script or add `--quantization` manually. The `--max-model-len 4096` setting limits context length to reduce memory use for testing; increase it only if your GPU has spare capacity. The first launch downloads the model from Hugging Face. Leave this terminal running. If vLLM reports CUDA, memory, or dependency errors, consult the [official vLLM documentation](https://docs.vllm.ai/en/stable/getting_started/quickstart/) and include the error in your testing feedback.
-
-#### Windows with NVIDIA GPU (WSL2 Ubuntu) — not yet verified
-
-After completing the **Windows/WSL2 installation in step 1**, open the **Ubuntu** terminal, change into the cloned repository directory, and follow the **Linux with NVIDIA GPU** commands immediately above (`nvidia-smi`, install vLLM, `vllm serve`).
-
-All Python, `vllm`, and project commands must run **inside WSL2 Ubuntu**, not PowerShell. Your NVIDIA GPU should appear when running `nvidia-smi` inside Ubuntu; if it does not, verify WSL2 and the host Windows NVIDIA driver before proceeding. Native Windows installation of vLLM is **not** supported by this setup.
-
-### 3. Configure the chat app to use your model (Linux / WSL2 only)
-
-**Why is this step needed?** The project's default YAML configuration points to the **Mac/MLX** version of Qwen. On Linux/WSL2, vLLM serves the quantized checkpoint under the name `Qwen/Qwen3-14B-AWQ`. The browser app must request **that exact name**.
-
-In the repo directory, create a personal config from the ready-made Linux example:
-
-```bash
-cp configs/generator.vllm.example.yaml configs/generator.local.yaml
-```
-
-You **do not need to edit it** for the commands above. Its important fields are:
-
-```yaml
-model: Qwen/Qwen3-14B-AWQ
-base_url: http://127.0.0.1:8080/v1
-```
-
-- `model` tells the chat app which model name to request from vLLM.
-- `base_url` tells it where to reach vLLM's **local** OpenAI-compatible API; this is **not** an external paid service.
-- `configs/generator.local.yaml` is ignored by Git, so personal settings are not committed.
-
-**Check that the model server is reachable:** In a **new** Ubuntu/Linux terminal, from the project directory, run:
-
-```bash
-curl -fsS http://127.0.0.1:8080/v1/models
-```
-
-You should see JSON listing `Qwen/Qwen3-14B-AWQ`. If the request fails, the model server in Terminal A is not ready or did not start successfully. On Mac, the same check should show the MLX model name.
-
-### 4. Start the browser chat (Terminal B)
-
-Open **another terminal** in the repository directory. Keep Terminal A (the model server) running.
-
-**macOS, without internet search (default):**
+Open a **second Terminal window or tab**, change into the repository directory (`cd eth-sycophancy-survey-agent` if you are in its parent folder), and run:
 
 ```bash
 source .venv/bin/activate
 python scripts/run_survey_server.py
 ```
 
-**Linux / Windows WSL2, without internet search:**
+Open **http://127.0.0.1:8090/** in your browser. Choose a topic, select **Neutral** or **Sycophantic**, and start a conversation. The default Mac configuration is already correct; **no YAML editing or vLLM installation is needed**.
 
-```bash
-source .venv/bin/activate
-SURVEY_MODEL_CONFIG=configs/generator.local.yaml python scripts/run_survey_server.py
-```
-
-**Optional internet search on any platform:** Install and start [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Mac/Windows) or [Docker Engine](https://docs.docker.com/engine/install/) (Linux). On Windows, enable Docker Desktop's WSL2 integration for Ubuntu. Start the local SearXNG service from the repository root:
+**Optional internet search (Mac):** Install and launch [Docker Desktop](https://www.docker.com/products/docker-desktop/). From the repository directory, run:
 
 ```bash
 docker compose -f deploy/searxng.compose.yaml up -d
 ```
 
-Then use **one** of these app launch commands instead of the corresponding no-search command:
+Stop the browser app in Terminal B with `Ctrl+C`, then restart it with:
 
-Mac:
 ```bash
 ENABLE_WEB_SEARCH=1 python scripts/run_survey_server.py
 ```
 
-Linux / Windows WSL2:
+In the browser, choose **Internet → On (search)** before starting a **new conversation**. The model server in Terminal A stays running.
+
+### B. Linux with NVIDIA GPU — unverified setup
+
+**Prerequisites:** Ubuntu/Debian Linux, a compatible NVIDIA GPU and driver, Git, Python 3.11+ and an internet connection. The Linux path uses the [4-bit Qwen3-14B-AWQ checkpoint](https://huggingface.co/Qwen/Qwen3-14B-AWQ) with [vLLM](https://docs.vllm.ai/en/stable/getting_started/installation/gpu/), rather than the Mac-specific MLX server. **A compatible 16 GB GPU is a starting point, not a guarantee;** the runtime needs memory in addition to the quantized weights.
+
+**Step 1 — Install prerequisites, clone the repository and install the project**
+
+```bash
+sudo apt update
+sudo apt install -y git python3 python3-venv python3-pip curl
+python3 --version
+nvidia-smi
+git clone https://github.com/elenalabzina/eth-sycophancy-survey-agent.git
+cd eth-sycophancy-survey-agent
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[server,dev]'
+```
+
+Check that Python reports **3.11+**. If `nvidia-smi` fails, resolve GPU/driver access before continuing. On distributions whose default Python is older than 3.11, install a compatible Python version and create the virtual environment using that interpreter.
+
+**Step 2 — Install vLLM (required), then start the model in Terminal A**
+
+```bash
+python -m pip install vllm
+vllm --help
+vllm serve Qwen/Qwen3-14B-AWQ --host 127.0.0.1 --port 8080 --max-model-len 4096
+```
+
+`vllm serve` **starts** the model server; it does **not** install vLLM. The pre-quantized AWQ model downloads on first launch. Keep the terminal open.
+
+**Step 3 — Configure and start the chat app in Terminal B**
+
+Open a new terminal, return to the repository directory and run:
+
+```bash
+source .venv/bin/activate
+cp configs/generator.vllm.example.yaml configs/generator.local.yaml
+curl -fsS http://127.0.0.1:8080/v1/models
+SURVEY_MODEL_CONFIG=configs/generator.local.yaml python scripts/run_survey_server.py
+```
+
+The `curl` check should return a JSON list including `Qwen/Qwen3-14B-AWQ`. If it fails, check Terminal A before launching the chat app. The local YAML copy tells the app to use this exact model name at `http://127.0.0.1:8080/v1`; it is Git-ignored and **does not need manual editing**.
+
+Open **http://127.0.0.1:8090/** to chat.
+
+### C. Windows 10/11 with NVIDIA GPU — unverified setup
+
+Use **Windows Subsystem for Linux (WSL2)** with Ubuntu. The current instructions do not support native Windows vLLM.
+
+**Step 1 — Install Ubuntu/WSL2**
+
+Open **PowerShell as Administrator**:
+
+```powershell
+wsl --install -d Ubuntu
+```
+
+Restart when prompted and open **Ubuntu** from the Start menu. Create the Linux user account. Install/update a Windows NVIDIA driver compatible with WSL GPU access; follow [Microsoft's WSL instructions](https://learn.microsoft.com/en-us/windows/wsl/install) and [NVIDIA's CUDA on WSL guidance](https://docs.nvidia.com/cuda/wsl-user-guide/index.html). **Do not install a separate Linux NVIDIA display driver inside WSL.**
+
+**Step 2 — In Ubuntu, follow Linux section B, steps 1–3**
+
+All `apt`, `python`, `pip`, `nvidia-smi`, `vllm`, and app commands must run in the **Ubuntu terminal**, not Windows PowerShell. Verify that `nvidia-smi` works in Ubuntu before installing vLLM.
+
+Once the app starts, open **http://127.0.0.1:8090/** in a Windows browser. WSL2 normally forwards the local ports.
+
+### Optional internet search (Linux / Windows WSL2)
+
+Install and start [Docker Engine](https://docs.docker.com/engine/install/) on Linux, or [Docker Desktop](https://www.docker.com/products/docker-desktop/) with Ubuntu WSL2 integration enabled on Windows.
+
+From the repository directory, start the search service:
+
+```bash
+docker compose -f deploy/searxng.compose.yaml up -d
+```
+
+Stop the chat app (not the Qwen server) with `Ctrl+C`, then restart it using the **Linux/WSL2 model configuration**:
+
 ```bash
 ENABLE_WEB_SEARCH=1 SURVEY_MODEL_CONFIG=configs/generator.local.yaml python scripts/run_survey_server.py
 ```
 
-Open **http://127.0.0.1:8090/** in a browser. On Windows, try the normal Windows browser; WSL2 normally forwards localhost ports. If using internet search, choose **Internet → On (search)** *before* starting a new conversation. Otherwise keep Internet **Off**.
+Select **Internet → On (search)** before starting a new conversation. Search queries may reach external services; do not enter identifying or confidential information.
 
-Choose the topic, condition (Neutral/Sycophantic), and duration; click **New conversation**. Use **Download transcript** if you want to keep a JSON copy. Sessions are stored in memory and are lost when the app restarts. Web search runs only for explicitly current-information requests; searches may reach third-party engines, so avoid private identifying data.
+### For all platforms: using the interface
+
+You can compare the Neutral and Sycophantic conditions on AI regulation or clean energy topics, set the duration, and optionally **Download transcript** as JSON. Conversations live only in memory and are not preserved after the browser app is restarted. To stop either server, press `Ctrl+C` in its terminal. When reopening a new terminal, change into the project directory and activate `.venv` with `source .venv/bin/activate`.
 
 ### Troubleshooting
 
