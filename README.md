@@ -31,10 +31,10 @@ You can test either style in the browser and download the conversation afterward
 
 There are **two processes**, which must run at the same time:
 
-1. **Model server** (Terminal A, port **8080**): runs Qwen3-14B. On Apple Silicon this uses MLX; on Linux/Windows with NVIDIA GPUs it uses vLLM.
+1. **Model server** (Terminal A, port **8080**): runs Qwen3-14B. On Apple Silicon this uses MLX; on Linux/Windows with NVIDIA GPUs it uses vLLM with a 4-bit AWQ checkpoint.
 2. **Browser chat app** (Terminal B, port **8090**): connects to the model server. It does **not** run or download the model by itself.
 
-**Hardware:** Qwen3-14B is a large local model. The Mac instructions use a 4-bit quantized variant; the Linux/WSL2 instructions below use the unquantized model, which typically needs **around 28 GB of GPU memory just for the weights**, plus additional memory for serving and context. As a rough guideline, plan for **32 GB+ VRAM**, though actual requirements depend on configuration. A 16–24 GB GPU may run out of memory. An NVIDIA GPU and compatible drivers are required for the Linux/WSL2 pathway below. If you have different hardware, these instructions may not apply.
+**Hardware:** Qwen3-14B is a large local model. Both the Mac/MLX version and the Linux/WSL2 vLLM version below use **4-bit quantized weights** (different formats: MLX versus AWQ). The AWQ weights need roughly 7–10 GB before runtime overhead; KV cache, context length, and serving overhead require additional VRAM. A compatible NVIDIA GPU with **16 GB or more VRAM is a reasonable starting point**, not a guarantee. Smaller GPUs may fail, and requirements vary with model settings and hardware. Check [vLLM's AWQ compatibility table](https://docs.vllm.ai/en/latest/features/quantization/) for your GPU generation. The Linux/WSL2 path requires an NVIDIA GPU with compatible drivers; alternative hardware is not covered here.
 
 **Software:** Python 3.11+, Git, and an internet connection for first-time package/model downloads. No paid LLM API key is required. Docker is optional **only for web search**.
 
@@ -94,7 +94,7 @@ python -m mlx_lm server --model mlx-community/Qwen3-14B-4bit --port 8080
 
 The default config `configs/generator.example.yaml` already matches this model; **no configuration change is needed on Mac**.
 
-#### Linux with NVIDIA GPU — not yet verified
+#### Linux with NVIDIA GPU (4-bit AWQ) — not yet verified
 
 **Yes, you must install vLLM before running `vllm serve`.** vLLM is the local model-serving program; `serve` starts an OpenAI-compatible HTTP server. It does not install anything.
 
@@ -114,13 +114,13 @@ python -m pip install vllm
 vllm --help
 ```
 
-Then start Qwen on local port 8080:
+Then start the [official Qwen3-14B-AWQ 4-bit model](https://huggingface.co/Qwen/Qwen3-14B-AWQ) on local port 8080:
 
 ```bash
-vllm serve Qwen/Qwen3-14B --host 127.0.0.1 --port 8080
+vllm serve Qwen/Qwen3-14B-AWQ --host 127.0.0.1 --port 8080 --max-model-len 4096
 ```
 
-The first launch downloads the [Qwen3-14B model](https://huggingface.co/Qwen/Qwen3-14B) from Hugging Face; this can be large. Leave this terminal running. If vLLM reports CUDA, memory, or dependency errors, consult the [official vLLM documentation](https://docs.vllm.ai/en/stable/getting_started/quickstart/) and include the error in your testing feedback.
+The checkpoint is **already quantized**: you do not need to run a quantization script or add `--quantization` manually. The `--max-model-len 4096` setting limits context length to reduce memory use for testing; increase it only if your GPU has spare capacity. The first launch downloads the model from Hugging Face. Leave this terminal running. If vLLM reports CUDA, memory, or dependency errors, consult the [official vLLM documentation](https://docs.vllm.ai/en/stable/getting_started/quickstart/) and include the error in your testing feedback.
 
 #### Windows with NVIDIA GPU (WSL2 Ubuntu) — not yet verified
 
@@ -130,7 +130,7 @@ All Python, `vllm`, and project commands must run **inside WSL2 Ubuntu**, not Po
 
 ### 3. Configure the chat app to use your model (Linux / WSL2 only)
 
-**Why is this step needed?** The project's default YAML configuration points to the **Mac/MLX** version of Qwen. On Linux/WSL2, vLLM serves the model under the name `Qwen/Qwen3-14B`. The browser app must request **that exact name**.
+**Why is this step needed?** The project's default YAML configuration points to the **Mac/MLX** version of Qwen. On Linux/WSL2, vLLM serves the quantized checkpoint under the name `Qwen/Qwen3-14B-AWQ`. The browser app must request **that exact name**.
 
 In the repo directory, create a personal config from the ready-made Linux example:
 
@@ -141,7 +141,7 @@ cp configs/generator.vllm.example.yaml configs/generator.local.yaml
 You **do not need to edit it** for the commands above. Its important fields are:
 
 ```yaml
-model: Qwen/Qwen3-14B
+model: Qwen/Qwen3-14B-AWQ
 base_url: http://127.0.0.1:8080/v1
 ```
 
@@ -155,7 +155,7 @@ base_url: http://127.0.0.1:8080/v1
 curl -fsS http://127.0.0.1:8080/v1/models
 ```
 
-You should see JSON listing `Qwen/Qwen3-14B`. If the request fails, the model server in Terminal A is not ready or did not start successfully. On Mac, the same check should show the MLX model name.
+You should see JSON listing `Qwen/Qwen3-14B-AWQ`. If the request fails, the model server in Terminal A is not ready or did not start successfully. On Mac, the same check should show the MLX model name.
 
 ### 4. Start the browser chat (Terminal B)
 
@@ -203,12 +203,14 @@ Choose the topic, condition (Neutral/Sycophantic), and duration; click **New con
 | --- | --- |
 | `vllm: command not found` | Activate `.venv`; run `python -m pip install vllm`; check the installation log and `vllm --help`. |
 | `nvidia-smi` fails | NVIDIA driver/GPU support is unavailable to Linux/WSL2. On Windows, check the host NVIDIA driver and WSL2 installation. |
-| CUDA out-of-memory during startup | The full-precision Qwen3-14B model may not fit your GPU; the 4-bit Mac MLX model has much lower memory requirements. |
+| CUDA out-of-memory during startup | The AWQ model still needs runtime and KV-cache memory beyond its compressed weights. Try closing GPU-intensive apps, reducing `--max-model-len`, or using a larger compatible GPU. Quantization does not guarantee that the model will fit. |
 | `curl ...:8080/v1/models` fails | Start or troubleshoot the model server in Terminal A first; check that it has finished loading and port 8080 is free. |
 | `Model ... does not exist` | Your `model:` field must match the name returned by `/v1/models`. Linux/WSL2 must launch with `SURVEY_MODEL_CONFIG=configs/generator.local.yaml`. |
 | Port 8090 already in use | Stop an older instance of the browser app with Ctrl+C before starting a new one. |
 | The browser loads but chat requests fail | Make sure **both** servers are running, each in its own terminal, and that the model API check above succeeds. |
 | Internet option unavailable | Start Docker/SearXNG, then restart the chat app with `ENABLE_WEB_SEARCH=1`; select Internet On for a new conversation. |
+
+**Experimental note:** Mac MLX 4-bit and NVIDIA AWQ 4-bit are different quantizations of Qwen3-14B, not bit-identical models. They may produce different outputs even with identical prompts. For a controlled experimental deployment, hold the model checkpoint and inference setup constant across participants and validate the treatment on that setup.
 
 **Testing feedback is welcome**, especially for Linux and Windows/WSL2, which have not yet been verified on the author's machines. Please report your OS/version, Python version, GPU model and memory, the command you ran, and the **relevant error output** in a [GitHub issue](https://github.com/elenalabzina/eth-sycophancy-survey-agent/issues/new). Remove private details first.
 
